@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password_hash String
+  first_name    String
+  last_name     String?
+  language      String   @default("ru") // 'ru', 'uz', 'en'
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  // Relations
+  subscriptions Subscription[]
+  vpn_accounts  VpnAccount[]
+  payment_logs  PaymentLog[]
+
+  @@map("users")
+}
+
+model Subscription {
+  id         String   @id @default(cuid())
+  user_id    String
+  plan_name  String
+  price      Decimal  @db.Decimal(10, 2)
+  currency   String   @default("USD")
+  start_date DateTime
+  end_date   DateTime
+  status     String   @default("active") // 'active', 'expired', 'cancelled'
+  created_at DateTime @default(now())
+
+  // Relations
+  user         User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  vpn_accounts VpnAccount[]
+
+  @@map("subscriptions")
+}
+
+model VpnAccount {
+  id               String   @id @default(cuid())
+  user_id          String
+  subscription_id  String
+  marzban_user_id  String
+  server_id        String // ID сервера в MarzBan
+  username         String   @unique
+  password         String?
+  created_at       DateTime @default(now())
+  expires_at       DateTime
+
+  // Relations
+  user         User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  subscription Subscription @relation(fields: [subscription_id], references: [id], onDelete: Cascade)
+
+  @@map("vpn_accounts")
+}
+
+model PaymentLog {
+  id             String   @id @default(cuid())
+  user_id        String
+  amount         Decimal  @db.Decimal(10, 2)
+  currency       String
+  provider       String // 'click', 'payme'
+  transaction_id String
+  status         String // 'pending', 'completed', 'failed'
+  created_at     DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("payment_logs")
+}
+
+model PricingPlan {
+  id            String   @id @default(cuid())
+  name          String
+  duration_days Int
+  price         Decimal  @db.Decimal(10, 2)
+  currency      String   @default("USD")
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+
+  @@map("pricing_plans")
+}
