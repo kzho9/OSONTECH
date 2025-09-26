@@ -31,6 +31,7 @@
 - **API Client**: TanStack Query + Axios
 - **Forms**: React Hook Form
 - **i18n**: next-i18next
+- **Landing Page**: Modern HTML/CSS/JS with animations
 
 ### DevOps
 - **Containerization**: Docker + Docker Compose
